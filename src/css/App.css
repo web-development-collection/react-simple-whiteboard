@@ -23,11 +23,29 @@ html, body, canvas {
     padding: 0 32px;
 
     font-weight: 600;
+
+    display: flex;
+    justify-content: space-between;
 }
 
 #root > div > div span {
     color: #5d21f5;
 }
+
+
+button.Record {
+    color: white;
+    font-weight: 600;
+    background-color: orangered;
+
+    padding: 8px 12px;
+    border: none;
+    border-radius: 10px;
+
+    outline: none;
+    cursor: pointer;
+}
+
 
 canvas.Canvas {
     background-color: #f1f1f1;
