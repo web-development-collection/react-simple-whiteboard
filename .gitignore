@@ -1,6 +1,7 @@
 # ide
-.idea
-wsl.txt
+/.idea
+/cert
+config.txt
 
 # dependencies
 /node_modules

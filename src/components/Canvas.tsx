@@ -12,11 +12,15 @@ export class Canvas extends Component<any, any> {
   private refCanvas = React.createRef<ExtendedHTMLCanvasElement>();
   private prevCoords: [number, number] = [0, 0];
 
-  private mediaSource = new MediaSource();
+  // private mediaSource = new MediaSource();
+  // private sourceBuffer: any;
+
   private recordedBlobs: any;
-  private sourceBuffer: any;
   private mediaRecorder: any;
-  private stream: any;
+  // @ts-ignore
+  private canvasStream: MediaStream;
+  // @ts-ignore
+  private audioStream: MediaStream;
 
 
   private get canvas(): ExtendedHTMLCanvasElement {
@@ -26,7 +30,7 @@ export class Canvas extends Component<any, any> {
 
   public componentDidMount() {
     this.handlePen();
-    this.handleRecording();
+    this.handleRecording().then();
   }
 
   // Drawing
@@ -115,15 +119,26 @@ export class Canvas extends Component<any, any> {
   }
 
   // Recording
-  private handleRecording() {
-    this.stream = (this.canvas as any)?.captureStream();
-    console.log('Started stream capture from canvas element: ', this.stream);
+  private async handleRecording() {
+    this.canvasStream = this.canvas.captureStream();
+    console.log('Started canvasStream capture from canvas element: ', this.canvasStream);
 
-    this.mediaSource.addEventListener('sourceopen', () => {
-      console.log('MediaSource opened');
-      this.sourceBuffer = this.mediaSource.addSourceBuffer('video/webm; codecs="vp8"');
-      console.log('Source buffer: ', this.sourceBuffer);
-    });
+    // this.mediaSource.addEventListener('sourceopen', () => {
+    //   console.log('MediaSource opened');
+    //   this.sourceBuffer = this.mediaSource.addSourceBuffer('video/webm; codecs="vp8"');
+    //   console.log('Source buffer: ', this.sourceBuffer);
+    // });
+
+    const constraints = {
+      audio: true,
+    }
+
+    try {
+      this.audioStream = await navigator.mediaDevices.getUserMedia(constraints);
+    }
+    catch (error) {
+      console.log(error);
+    }
   }
 
   public startRecording() {
@@ -138,8 +153,8 @@ export class Canvas extends Component<any, any> {
     const onStop = (event: any) => {
       console.log('Recorder stopped: ', event);
       const blob = new Blob(this.recordedBlobs, {type: 'video/webm'});
-      const url = window.URL.createObjectURL(blob);
 
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
@@ -149,19 +164,24 @@ export class Canvas extends Component<any, any> {
 
       setTimeout(() => {
         document.body.removeChild(a);
-
-        window.URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url);
       }, 100);
     }
 
 
     let options = {
       audio: true,
-      mimeType: 'video/webm'
+      mimeType: 'video/webm',
     };
     this.recordedBlobs = [];
     try {
-      this.mediaRecorder = new MediaRecorder(this.stream, options);
+      const combinedStream = new MediaStream([
+        this.audioStream.getTracks()[0],
+        this.canvasStream.getTracks()[0],
+      ]);
+
+      this.mediaRecorder = new MediaRecorder(combinedStream, options);
+      // this.mediaRecorder = new MediaRecorder(this.canvasStream, options);
     }
     catch (e0) {
       console.log('Unable to create MediaRecorder with options Object: ', e0);
@@ -170,7 +190,7 @@ export class Canvas extends Component<any, any> {
           audio: true,
           mimeType: 'video/webm,codecs=vp9'
         };
-        this.mediaRecorder = new MediaRecorder(this.stream, options);
+        this.mediaRecorder = new MediaRecorder(this.canvasStream, options);
       }
       catch (e1) {
         console.log('Unable to create MediaRecorder with options Object: ', e1);
@@ -180,7 +200,7 @@ export class Canvas extends Component<any, any> {
             audio: true,
             mimeType: 'video/vp8',
           }; // Chrome 47
-          this.mediaRecorder = new MediaRecorder(this.stream, options);
+          this.mediaRecorder = new MediaRecorder(this.canvasStream, options);
         }
         catch (e2) {
           alert('MediaRecorder is not supported by this browser.\n\n' +
