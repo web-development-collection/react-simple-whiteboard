@@ -1,7 +1,6 @@
 # ide
 .idea
 cert
-config.txt
 
 # dependencies
 /node_modules
