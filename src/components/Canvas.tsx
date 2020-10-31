@@ -1,28 +1,32 @@
 import React, {Component, ReactNode} from 'react';
+import CanvasTextItem from "./CanvasTextItem";
 
 
 
 class Canvas extends Component<any, any> {
   private refCanvas = React.createRef<HTMLCanvasElement>();
+  private refCanvasWrapper = React.createRef<HTMLDivElement>();
   private prevCoords: [number, number] = [0, 0];
+
+  public state: any = {
+    tf: []
+  }
 
 
   private get canvas(): HTMLCanvasElement {
     return this.refCanvas.current!;
   }
-
-
+  private get canvasWrapper(): HTMLDivElement {
+    return this.refCanvasWrapper.current!;
+  }
 
 
   public componentDidMount() {
     const {clientHeight, clientWidth} = this.canvas;
 
     const dpi = window.devicePixelRatio;
-
     this.canvas.height = clientHeight * dpi;
     this.canvas.width = clientWidth * dpi;
-
-
 
     const context = this.canvas.getContext("2d")!;
     context!.scale(dpi, dpi);
@@ -90,14 +94,34 @@ class Canvas extends Component<any, any> {
       }
     });
 
+
+    // Add a text field
+    this.canvas.addEventListener('dblclick', (e) => {
+      console.log("Add textfield");
+
+      const x = e.clientX - this.canvasWrapper.offsetLeft;
+      const y = e.clientY - this.canvasWrapper.offsetTop;
+
+      console.log(x, y);
+
+      this.setState((prevState: any) => ({ tf: [...prevState.tf, {
+        value: "Hallo",
+        position: [x, y],
+      }]}));
+    });
   }
 
-
   public render(): ReactNode {
-    return <canvas
-      className="Canvas"
-      ref={this.refCanvas}
-    />;
+    return <div ref={this.refCanvasWrapper} className="canvas-wrapper">
+      {this.state.tf.map((tf: any, index: number) =>
+        <CanvasTextItem {...tf} key={index} />
+      )}
+
+      <canvas
+        className="Canvas"
+        ref={this.refCanvas}
+      />
+    </div>;
   }
 }
 
