@@ -40,6 +40,8 @@ class Canvas extends Component<any, any> {
       // context.quadraticCurveTo(x, y, y, x);
       context.lineTo(x, y);
 
+      console.log('#');
+
       // Circle
       // context.beginPath();
       // context.rect(x, y, 10, 5);
